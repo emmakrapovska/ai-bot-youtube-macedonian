@@ -25,7 +25,7 @@ public class ExtractionSessionServiceImpl implements ExtractionSessionService {
         return extractionSessionRepository.findAll();
     }
 
-    @Override..
+    @Override
     public Optional<ExtractionSession> findById(Long id) {
         return extractionSessionRepository.findById(id);
     }
