@@ -1,11 +1,16 @@
 package mk.ukim.finki.aibotbackend.bot.core;
 
+import mk.ukim.finki.aibotbackend.model.domain.ExtractedPost;
 import mk.ukim.finki.aibotbackend.model.domain.ExtractionSession;
+import mk.ukim.finki.aibotbackend.model.domain.ExtractionTarget;
+import mk.ukim.finki.aibotbackend.model.dto.CreateExtractedPostDto;
 import mk.ukim.finki.aibotbackend.model.exception.SessionNotFoundException;
 import mk.ukim.finki.aibotbackend.service.domain.BotActionLogService;
 import mk.ukim.finki.aibotbackend.service.domain.ExtractedPostService;
 import mk.ukim.finki.aibotbackend.service.domain.ExtractionSessionService;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class BotOrchestratorImpl implements BotOrchestrator {
@@ -15,10 +20,10 @@ public class BotOrchestratorImpl implements BotOrchestrator {
     private final BotActionLogService botActionLogService;
 
     public BotOrchestratorImpl(
-        SocialNetworkBot socialNetworkBot,
-        ExtractionSessionService extractionSessionService,
-        ExtractedPostService extractedPostService,
-        BotActionLogService botActionLogService
+            SocialNetworkBot socialNetworkBot,
+            ExtractionSessionService extractionSessionService,
+            ExtractedPostService extractedPostService,
+            BotActionLogService botActionLogService
     ) {
         this.socialNetworkBot = socialNetworkBot;
         this.extractionSessionService = extractionSessionService;
@@ -29,8 +34,8 @@ public class BotOrchestratorImpl implements BotOrchestrator {
     @Override
     public void runSession(Long sessionId) {
         ExtractionSession session = extractionSessionService
-            .findById(sessionId)
-            .orElseThrow(() -> new SessionNotFoundException(sessionId));
+                .findById(sessionId)
+                .orElseThrow(() -> new SessionNotFoundException(sessionId));
 
         // TODO(student): Orchestrate the full run:
         //  1. socialNetworkBot.login()
@@ -42,6 +47,29 @@ public class BotOrchestratorImpl implements BotOrchestrator {
         //  3. mark the session COMPLETED via extractionSessionService.complete(sessionId),
         //     or FAILED via extractionSessionService.fail(sessionId) when something goes wrong
         //  4. always socialNetworkBot.shutdown() at the end
-        throw new UnsupportedOperationException("TODO(student): Implement BotOrchestrator.runSession().");
+        
+        try {
+            socialNetworkBot.login();
+
+            for (ExtractionTarget target : session.getTargets()) {
+                List<CreateExtractedPostDto> extractedPosts = socialNetworkBot.execute(
+                        target,
+                        (action, successful) -> botActionLogService.log(session, action, successful)
+                );
+
+                List<ExtractedPost> posts = extractedPosts.stream()
+                        .map(dto -> dto.toExtractedPost(session))
+                        .toList();
+
+                extractedPostService.saveAll(posts);
+            }
+
+            extractionSessionService.complete(sessionId);
+
+        } catch (Exception e) {
+            extractionSessionService.fail(sessionId);
+        } finally {
+            socialNetworkBot.shutdown();
+        }
     }
 }
