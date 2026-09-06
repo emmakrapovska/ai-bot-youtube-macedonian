@@ -47,7 +47,7 @@ public class BotOrchestratorImpl implements BotOrchestrator {
         //  3. mark the session COMPLETED via extractionSessionService.complete(sessionId),
         //     or FAILED via extractionSessionService.fail(sessionId) when something goes wrong
         //  4. always socialNetworkBot.shutdown() at the end
-        
+
         try {
             socialNetworkBot.login();
 
@@ -56,14 +56,12 @@ public class BotOrchestratorImpl implements BotOrchestrator {
                         target,
                         (action, successful) -> botActionLogService.log(session, action, successful)
                 );
-
                 List<ExtractedPost> posts = extractedPosts.stream()
                         .map(dto -> dto.toExtractedPost(session))
                         .toList();
 
                 extractedPostService.saveAll(posts);
             }
-
             extractionSessionService.complete(sessionId);
 
         } catch (Exception e) {
