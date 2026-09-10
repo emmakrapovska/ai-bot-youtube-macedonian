@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import postApi from '../api/postApi.ts';
 import type { PageResponse, PostFilter, PostResponse } from '../api/types/post.ts';
 
 /**
@@ -7,15 +8,32 @@ import type { PageResponse, PostFilter, PostResponse } from '../api/types/post.t
  * loading/error state and a delete action (postApi.delete).
  */
 const usePosts = (filter: PostFilter, page: number, size: number) => {
-  void filter;
-  void page;
-  void size;
+  const [posts, setPosts] = useState<PageResponse<PostResponse> | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const [posts] = useState<PageResponse<PostResponse> | null>(null);
-  const [loading] = useState<boolean>(false);
+  const fetchPosts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await postApi.findAll(filter, page, size);
+      setPosts(response.data);
+    } catch (err) {
+      console.error('Failed to load posts.', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [filter, page, size]);
+
+  useEffect(() => {
+    void fetchPosts();
+  }, [fetchPosts]);
 
   const onDelete = async (id: number) => {
-    void id;
+    try {
+      await postApi.delete(id.toString());
+      await fetchPosts();
+    } catch (err) {
+      console.error('Failed to delete post.', err);
+    }
   };
 
   return { posts, loading, onDelete };

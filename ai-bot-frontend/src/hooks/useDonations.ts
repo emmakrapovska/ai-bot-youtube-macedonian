@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import donationApi from '../api/donationApi.ts';
 import type { CreateDonationBatchRequest, DonationBatchResponse } from '../api/types/donation.ts';
 
 /**
@@ -7,17 +8,50 @@ import type { CreateDonationBatchRequest, DonationBatchResponse } from '../api/t
  * re-fetching after every mutation, with loading/error state.
  */
 const useDonations = () => {
-  const [donations] = useState<DonationBatchResponse[]>([]);
-  const [loading] = useState<boolean>(false);
+  const [donations, setDonations] = useState<DonationBatchResponse[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const fetchDonations = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await donationApi.findAll();
+      setDonations(response.data);
+    } catch (err) {
+      console.error('Failed to load donations.', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchDonations();
+  }, [fetchDonations]);
 
   const onCreate = async (data: CreateDonationBatchRequest) => {
-    void data;
+    try {
+      await donationApi.add(data);
+      await fetchDonations();
+    } catch (err) {
+      console.error('Failed to create donation batch.', err);
+    }
   };
+
   const onApprove = async (id: number) => {
-    void id;
+    try {
+      await donationApi.approve(id.toString());
+      await fetchDonations();
+    } catch (err) {
+      console.error('Failed to approve donation batch.', err);
+    }
   };
+
   const onSubmit = async (id: number) => {
-    void id;
+    try {
+      await donationApi.submit(id.toString());
+      await fetchDonations();
+    } catch (err) {
+      console.error('Failed to submit donation batch.', err);
+    }
   };
 
   return { donations, loading, onCreate, onApprove, onSubmit };
