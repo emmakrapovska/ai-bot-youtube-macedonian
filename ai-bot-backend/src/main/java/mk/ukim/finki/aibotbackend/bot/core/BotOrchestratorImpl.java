@@ -1,5 +1,6 @@
 package mk.ukim.finki.aibotbackend.bot.core;
 
+import org.springframework.transaction.annotation.Transactional;
 import mk.ukim.finki.aibotbackend.model.domain.ExtractedPost;
 import mk.ukim.finki.aibotbackend.model.domain.ExtractionSession;
 import mk.ukim.finki.aibotbackend.model.domain.ExtractionTarget;
@@ -8,6 +9,8 @@ import mk.ukim.finki.aibotbackend.model.exception.SessionNotFoundException;
 import mk.ukim.finki.aibotbackend.service.domain.BotActionLogService;
 import mk.ukim.finki.aibotbackend.service.domain.ExtractedPostService;
 import mk.ukim.finki.aibotbackend.service.domain.ExtractionSessionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +21,7 @@ public class BotOrchestratorImpl implements BotOrchestrator {
     private final ExtractionSessionService extractionSessionService;
     private final ExtractedPostService extractedPostService;
     private final BotActionLogService botActionLogService;
+    private static final Logger log = LoggerFactory.getLogger(BotOrchestratorImpl.class);
 
     public BotOrchestratorImpl(
             SocialNetworkBot socialNetworkBot,
@@ -31,6 +35,7 @@ public class BotOrchestratorImpl implements BotOrchestrator {
         this.botActionLogService = botActionLogService;
     }
 
+    @Transactional
     @Override
     public void runSession(Long sessionId) {
         ExtractionSession session = extractionSessionService
@@ -65,6 +70,7 @@ public class BotOrchestratorImpl implements BotOrchestrator {
             extractionSessionService.complete(sessionId);
 
         } catch (Exception e) {
+            log.error("Session {} failed", sessionId, e);
             extractionSessionService.fail(sessionId);
         } finally {
             socialNetworkBot.shutdown();

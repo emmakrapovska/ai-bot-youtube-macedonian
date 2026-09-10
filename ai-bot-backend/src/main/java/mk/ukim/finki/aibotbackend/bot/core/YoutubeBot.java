@@ -33,6 +33,7 @@ public class YoutubeBot extends AbstractSocialNetworkBot {
 
     @Override
     public void login() {
+        browserAgent.start();
         log.info("YouTube extraction targets only public content — no login required.");
     }
 
