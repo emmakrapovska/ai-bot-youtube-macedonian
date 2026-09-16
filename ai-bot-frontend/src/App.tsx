@@ -14,24 +14,24 @@ import DonationsPage from './ui/pages/donation/DonationsPage/DonationsPage.tsx';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path='/register' element={<RegisterPage/>}/>
-        <Route path='/login' element={<LoginPage/>}/>
-        <Route path='/' element={<Layout/>}>
-          <Route index element={<HomePage/>}/>
-          <Route element={<ProtectedRoute/>}>
+      <BrowserRouter>
+        <Routes>
+          <Route path='/register' element={<RegisterPage/>}/>
+          <Route path='/login' element={<LoginPage/>}/>
+          <Route path='/' element={<Layout/>}>
             <Route element={<SessionsProvider><Outlet/></SessionsProvider>}>
-              <Route path='sessions' element={<SessionsPage/>}/>
-              <Route path='sessions/:id' element={<SessionDetailsPage/>}/>
+              <Route index element={<HomePage/>}/>
+              <Route element={<ProtectedRoute/>}>
+                <Route path='sessions' element={<SessionsPage/>}/>
+                <Route path='sessions/:id' element={<SessionDetailsPage/>}/>
+                <Route path='posts' element={<PostsPage/>}/>
+                <Route path='posts/:id' element={<PostDetailsPage/>}/>
+                <Route path='donations' element={<DonationsPage/>}/>
+              </Route>
             </Route>
-            <Route path='posts' element={<PostsPage/>}/>
-            <Route path='posts/:id' element={<PostDetailsPage/>}/>
-            <Route path='donations' element={<DonationsPage/>}/>
           </Route>
-        </Route>
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
   );
 }
 

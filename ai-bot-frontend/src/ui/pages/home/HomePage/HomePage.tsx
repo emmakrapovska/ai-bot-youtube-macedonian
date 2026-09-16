@@ -34,8 +34,8 @@ const HomePage = () => {
   ).length;
 
   const donatedPosts = donations.reduce(
-    (sum, donation) => sum + donation.postIds.length,
-    0
+      (sum, donation) => sum + (donation.postIds?.length ?? 0),
+      0
   );
 
   const latestSession =
